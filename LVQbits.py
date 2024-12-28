@@ -111,8 +111,6 @@ def read_Fvecs(file_path):
 
     return np.vstack(vectors)
 
-
-# 示例
 if __name__ == "__main__":
 
     # 读取数据集
