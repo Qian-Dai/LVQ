@@ -1,30 +1,52 @@
 import numpy as np
 import time
+import matplotlib.pyplot as plt
+from matplotlib import font_manager
+
+# 指定字体路径
+font_path = "/Users/austindai/Downloads/SimHei.ttf"  # 宋体路径
+font = font_manager.FontProperties(fname=font_path)
 
 
-def LVQ_firstLevel(Xin: np.ndarray, B1: float) -> (np.ndarray, float, float):
+def LVQ_firstLevel(vectors, B1: float) -> (np.ndarray, float, float):
 
     start_time = time.time()
 
-    # 中心化
-    X_mean = np.mean(Xin)
-    X = Xin - X_mean
+    # 计算所有向量的均值并去均值化
+    Vec_mean = np.mean(vectors, axis=1, keepdims=True)  # 每行的均值
 
-    # 计算量化范围和步长
-    u = np.max(X)
-    l = np.min(X)
-    delta = (u - l) / (2 ** B1 - 1)
-    delta = max(delta, 1.0)  # 避免步长为 0
+    Vec_noMean = vectors - Vec_mean  # 每个向量减去其均值
 
-    # 计算量化码和重建数据
-    quantized = np.clip(np.floor((X - l) / delta + 0.5), 0, 2 ** B1 - 1)
-    reconstructed = quantized * delta + l + X_mean
 
-    # 计算时间
+    # 计算每个向量的量化范围 u 和 l
+    u = np.max(Vec_noMean, axis=1)  # 每行的最大值
+    l = np.min(Vec_noMean, axis=1)  # 每行的最小值
+
+
+    # 计算量化步长 delta
+    delta = (u - l) / (2 ** B1 - 1)  # 每行的步长
+    delta = np.maximum(delta, 1.0)  # 避免步长为 0
+
+
+    # 量化数据
+    quantized = np.zeros_like(Vec_noMean)
+    for i in range(len(l)):
+        quantized[i] = np.clip(np.floor((Vec_noMean[i] - l[i]) / delta[i] + 0.5), 0, 2 ** B1 - 1)
+
+
+    reconstructed = np.zeros_like(quantized)
+    # 使用 for 循环逐行计算重建数据
+    for i in range(len(delta)):
+        reconstructed[i] = quantized[i] * delta[i] + l[i] + Vec_mean[i]
+
+
+    # 计算耗时
     elapsed_time = time.time() - start_time
 
-    # 计算均方误差
-    mse = np.mean((Xin - reconstructed) ** 2)
+    # 计算均方误差 (MSE)
+    mse = np.mean((vectors - reconstructed) ** 2)
+    print("均方误差 (MSE):", mse)
+
     return reconstructed, elapsed_time, mse
 
 
@@ -111,6 +133,8 @@ def read_Fvecs(file_path):
 
     return np.vstack(vectors)
 
+
+
 if __name__ == "__main__":
 
     # 读取数据集
@@ -119,5 +143,9 @@ if __name__ == "__main__":
     B1 = 1
     B2 = 1.6
 
-    # 评估一级和二级量化
-    evaluate_LVQ(data, B1, B2)
+    datatest = data[:2]
+    print(datatest)
+    comtest = LVQ_firstLevel(datatest,1)
+
+     # 评估一级和二级量化
+    #evaluate_LVQ(data, B1, B2)
