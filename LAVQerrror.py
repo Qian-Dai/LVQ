@@ -96,10 +96,15 @@ def calculate_average_perQueryVector(query_vectors, original_data, compressed_da
         original_avg_distance = np.mean(original_distances)  # 平均距离
         original_max_distance = np.max(original_distances)  # 最大距离
 
+
         # 计算 query 到压缩数据集的平方欧式距离
         compressed_distances = np.sum((compressed_data - query) ** 2, axis=1)
         compressed_avg_distance = np.mean(compressed_distances)  # 平均距离
         compressed_max_distance = np.max(compressed_distances)  # 最大距离
+
+
+
+
 
         # 计算平均距离增长百分比
         avg_increase_percentage = ((compressed_avg_distance - original_avg_distance) / original_avg_distance) * 100
@@ -118,7 +123,27 @@ def calculate_average_perQueryVector(query_vectors, original_data, compressed_da
 
 
 
+def calculate_ratio(query_vectors, original_data, compressed_data):
+    r_values = []  # 存储所有的ratio值
+    for query in query_vectors:
+        for i in range(len(original_data)):
+            data = original_data[i]
+            data1 = compressed_data[i]      # 逐个取出原始数据和压缩数据的对应向量
 
+            dist_original = np.sum((data - query) ** 2)     # 计算到原始向量的 data和压缩后的 data1的欧式距离
+            dist_compressed = np.sum((data1 - query) ** 2)
+
+            # 避免除以 0
+            if dist_original == 0:
+                continue
+
+            r = abs(dist_original - dist_compressed) / dist_original # 计算ratio值
+            r_values.append(r)
+
+    mean_r = np.mean(r_values)  # 计算均值和最大值
+    max_r = np.max(r_values)
+
+    return mean_r, max_r
 
 
 
@@ -130,7 +155,7 @@ if __name__ == "__main__":
   query_path = "/Users/austindai/Downloads/gist_query.fvecs"  # Replace with actual query file path
   data_path = "/Users/austindai/Downloads/gist_base.fvecs"  # Replace with actual original data file path
 
-  query = LVQbits.read_Fvecs(query_path)
+  query = LVQbits.read_Fvecs(query_path)[:1]
 
   original_data = LVQbits.read_Fvecs(data_path)
 
@@ -147,13 +172,17 @@ if __name__ == "__main__":
   print(f"Original Data - Max Distance: {original_max_distance}, Mean Distance: {original_mean_distance}")
   print(f"Compressed Data - Max Distance: {compressed_max_distance}, Mean Distance: {compressed_mean_distance}")
   plot_results(original_distances, compressed_distances, ratios) 错误的实验
-  """
-
-#新的实验，把每个向量计算对应的增大率存为数组，计算数组的最大值和平均值。
+  
+  #新的实验，把每个向量计算对应的增大率存为数组，计算数组的最大值和平均值。
 
 # 调用函数
 avg_distance_percentage, max_distance_percentage = calculate_average_perQueryVector(query, original_data, compressed_data)
 
 print("平均距离增长百分比的平均值:", avg_distance_percentage)
 print("最大距离增长百分比的平均值:", max_distance_percentage)
+  """
 
+meanR, maxR = calculate_ratio(query, original_data, compressed_data)
+
+print("ratio指标的平均值:", meanR)
+print("ratio指标的最大值:", maxR)
