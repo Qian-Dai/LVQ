@@ -125,7 +125,7 @@ def calculate_average_perQueryVector(query_vectors, original_data, compressed_da
 
 def calculate_ratio(query_vectors, original_data, compressed_data):
     r_values = []  # 存储所有的ratio值
-    for query in query_vectors:
+    for query in tqdm(query_vectors, desc="已经完成的query向量数：", unit="query"):
         for i in range(len(original_data)):
             data = original_data[i]
             data1 = compressed_data[i]      # 逐个取出原始数据和压缩数据的对应向量
@@ -155,7 +155,7 @@ if __name__ == "__main__":
   query_path = "/Users/austindai/Downloads/gist_query.fvecs"  # Replace with actual query file path
   data_path = "/Users/austindai/Downloads/gist_base.fvecs"  # Replace with actual original data file path
 
-  query = LVQbits.read_Fvecs(query_path)[:1]
+  query = LVQbits.read_Fvecs(query_path)
 
   original_data = LVQbits.read_Fvecs(data_path)
 
